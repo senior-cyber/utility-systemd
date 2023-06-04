@@ -57,6 +57,7 @@ func Install() error {
 	}
 	_ = exec.Command("sudo", "systemctl", "daemon-reload")
 	_ = exec.Command("sudo", "systemctl", "enable", _name)
+	_ = exec.Command("sudo", "systemctl", "start", _name)
 	return nil
 }
 
@@ -76,6 +77,7 @@ func Uninstall() error {
 
 	_name := config.Name
 
+	_ = exec.Command("sudo", "systemctl", "stop", _name)
 	_ = exec.Command("sudo", "systemctl", "disable", _name)
 	_ = os.Remove(filepath.Join(systemdPath, _name+".service"))
 	_ = exec.Command("sudo", "systemctl", "daemon-reload")
