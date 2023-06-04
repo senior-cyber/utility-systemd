@@ -16,12 +16,11 @@ var systemd string
 
 const systemdPath = "/etc/systemd/system"
 
-func Install() error {
+func Install(systemConfigFile string, appConfigFile string) error {
 	_cli, _ := filepath.Abs(os.Args[0])
 	_workspace := filepath.Dir(_cli)
-	_config, _ := filepath.Abs(os.Args[2])
 
-	config, configError := readConfig(_config)
+	config, configError := readConfig(systemConfigFile)
 	if configError != nil {
 		println(configError.Error())
 		return configError
@@ -49,7 +48,7 @@ func Install() error {
 	_systemd = strings.ReplaceAll(_systemd, "{{cli}}", _cli)
 	_systemd = strings.ReplaceAll(_systemd, "{{user}}", _user)
 	_systemd = strings.ReplaceAll(_systemd, "{{group}}", _group)
-	_systemd = strings.ReplaceAll(_systemd, "{{config}}", _config)
+	_systemd = strings.ReplaceAll(_systemd, "{{config}}", appConfigFile)
 	_systemdError := os.WriteFile(filepath.Join(systemdPath, _name+".service"), []byte(_systemd), 0755)
 	if _systemdError != nil {
 		println(_systemdError.Error())
@@ -61,10 +60,8 @@ func Install() error {
 	return nil
 }
 
-func Uninstall() error {
-	_config, _ := filepath.Abs(os.Args[2])
-
-	config, configError := readConfig(_config)
+func Uninstall(systemConfigFile string) error {
+	config, configError := readConfig(systemConfigFile)
 	if configError != nil {
 		println(configError.Error())
 		return configError
