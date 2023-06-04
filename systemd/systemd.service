@@ -1,0 +1,15 @@
+[Unit]
+Description={{name}}
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User={{user}}
+Group={{group}}
+WorkingDirectory={{workspace}}
+ExecStart={{cli}} --config {{config}}
+
+[Install]
+WantedBy=multi-user.target
