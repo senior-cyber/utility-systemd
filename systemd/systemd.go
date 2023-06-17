@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 //go:embed systemd.service
@@ -54,9 +55,15 @@ func Install(systemConfigFile string, appConfigFile string) error {
 		println(_systemdError.Error())
 		return _systemdError
 	}
-	_ = exec.Command("sudo", "systemctl", "daemon-reload")
-	_ = exec.Command("sudo", "systemctl", "enable", _name)
-	_ = exec.Command("sudo", "systemctl", "start", _name)
+	cmdSudo1 := exec.Command("sudo", "systemctl", "daemon-reload")
+	_, _ = cmdSudo1.CombinedOutput()
+	time.Sleep(1 * time.Second)
+	cmdSudo2 := exec.Command("sudo", "systemctl", "enable", _name)
+	_, _ = cmdSudo2.CombinedOutput()
+	time.Sleep(1 * time.Second)
+	cmdSudo3 := exec.Command("sudo", "systemctl", "start", _name)
+	_, _ = cmdSudo3.CombinedOutput()
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
