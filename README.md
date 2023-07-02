@@ -11,6 +11,6 @@
 ### install / uninstall
 
 ```shell
-./cli install systemd.json
+./cli install systemd.json config.json
 ./cli uninstall systemd.json
 ```

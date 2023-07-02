@@ -81,10 +81,16 @@ func Uninstall(systemConfigFile string) error {
 
 	_name := config.Name
 
-	_ = exec.Command("sudo", "systemctl", "stop", _name)
-	_ = exec.Command("sudo", "systemctl", "disable", _name)
+	cmdSudo1 := exec.Command("sudo", "systemctl", "stop", _name)
+	_, _ = cmdSudo1.CombinedOutput()
+	time.Sleep(1 * time.Second)
+	cmdSudo2 := exec.Command("sudo", "systemctl", "disable", _name)
+	_, _ = cmdSudo2.CombinedOutput()
+	time.Sleep(1 * time.Second)
 	_ = os.Remove(filepath.Join(systemdPath, _name+".service"))
-	_ = exec.Command("sudo", "systemctl", "daemon-reload")
+	cmdSudo3 := exec.Command("sudo", "systemctl", "daemon-reload")
+	_, _ = cmdSudo3.CombinedOutput()
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
