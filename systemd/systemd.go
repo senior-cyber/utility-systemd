@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/senior-cyber/utility-systemd/dto"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,19 +18,18 @@ var systemd string
 
 const systemdPath = "/etc/systemd/system"
 
-func Install(systemConfigFile string, appConfigFile string) error {
+func Install(systemConfigFile string, appConfigFile string) (string, error) {
 	_cli, _ := filepath.Abs(os.Args[0])
 	_workspace := filepath.Dir(_cli)
 
 	config, configError := readConfig(systemConfigFile)
 	if configError != nil {
-		println(configError.Error())
-		return configError
+		return "", configError
 	}
 
 	if config.Name == "" {
-		println("systemd is required")
-		return errors.New("systemd is required")
+		log.Println("systemd is required")
+		return "", errors.New("systemd is required")
 	}
 
 	var _user = "root"
@@ -52,46 +52,71 @@ func Install(systemConfigFile string, appConfigFile string) error {
 	_systemd = strings.ReplaceAll(_systemd, "{{config}}", appConfigFile)
 	_systemdError := os.WriteFile(filepath.Join(systemdPath, _name+".service"), []byte(_systemd), 0755)
 	if _systemdError != nil {
-		println(_systemdError.Error())
-		return _systemdError
+		return "", _systemdError
 	}
+
+	var _error error = nil
 	cmdSudo1 := exec.Command("sudo", "systemctl", "daemon-reload")
-	_, _ = cmdSudo1.CombinedOutput()
+	_, _error = cmdSudo1.CombinedOutput()
 	time.Sleep(1 * time.Second)
+	if _error != nil {
+		return "", _error
+	}
+
 	cmdSudo2 := exec.Command("sudo", "systemctl", "enable", _name)
-	_, _ = cmdSudo2.CombinedOutput()
+	_, _error = cmdSudo2.CombinedOutput()
 	time.Sleep(1 * time.Second)
+	if _error != nil {
+		return "", _error
+	}
+
 	cmdSudo3 := exec.Command("sudo", "systemctl", "start", _name)
-	_, _ = cmdSudo3.CombinedOutput()
+	_, _error = cmdSudo3.CombinedOutput()
 	time.Sleep(1 * time.Second)
-	return nil
+	if _error != nil {
+		return "", _error
+	}
+
+	return config.Name, nil
 }
 
-func Uninstall(systemConfigFile string) error {
+func Uninstall(systemConfigFile string) (string, error) {
 	config, configError := readConfig(systemConfigFile)
 	if configError != nil {
-		println(configError.Error())
-		return configError
+		return "", configError
 	}
 
 	if config.Name == "" {
-		println("systemd is required")
-		return errors.New("systemd is required")
+		log.Println("systemd is required")
+		return "", errors.New("systemd is required")
 	}
 
 	_name := config.Name
 
+	var _error error = nil
+
 	cmdSudo1 := exec.Command("sudo", "systemctl", "stop", _name)
-	_, _ = cmdSudo1.CombinedOutput()
+	_, _error = cmdSudo1.CombinedOutput()
 	time.Sleep(1 * time.Second)
+	if _error != nil {
+		return "", _error
+	}
+
 	cmdSudo2 := exec.Command("sudo", "systemctl", "disable", _name)
-	_, _ = cmdSudo2.CombinedOutput()
+	_, _error = cmdSudo2.CombinedOutput()
 	time.Sleep(1 * time.Second)
+	if _error != nil {
+		return "", _error
+	}
+
 	_ = os.Remove(filepath.Join(systemdPath, _name+".service"))
 	cmdSudo3 := exec.Command("sudo", "systemctl", "daemon-reload")
-	_, _ = cmdSudo3.CombinedOutput()
+	_, _error = cmdSudo3.CombinedOutput()
 	time.Sleep(1 * time.Second)
-	return nil
+	if _error != nil {
+		return "", _error
+	}
+	return config.Name, nil
 }
 
 func readConfig(_config string) (*dto.SystemdDto, error) {
